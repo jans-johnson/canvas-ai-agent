@@ -4,6 +4,8 @@ import itertools
 import time
 from typing import Optional
 
+from app.config import SHOW_LOGS
+
 class LoadingAnimation:
     """
     Displays a loading animation in the console while a task is running.
@@ -55,6 +57,7 @@ class LoadingAnimation:
             
         while self.is_running:
             char = next(chars)
+            # Display animation regardless of SHOW_LOGS setting
             sys.stdout.write(f"\r{self.message} {char}")
             sys.stdout.flush()
             time.sleep(0.1)

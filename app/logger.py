@@ -1,9 +1,10 @@
 import sys
 from datetime import datetime
+import os
 
 from loguru import logger as _logger
 
-from app.config import PROJECT_ROOT
+from app.config import PROJECT_ROOT, SHOW_LOGS
 
 
 _print_level = "INFO"
@@ -21,8 +22,18 @@ def define_log_level(print_level="INFO", logfile_level="DEBUG", name: str = None
     )  # name a log with prefix name
 
     _logger.remove()
-    _logger.add(sys.stderr, level=print_level)
-    _logger.add(PROJECT_ROOT / f"logs/{log_name}.log", level=logfile_level)
+    
+    # Only add stderr handler if SHOW_LOGS is True
+    if SHOW_LOGS:
+        _logger.add(sys.stderr, level=print_level)
+    
+    # Always add file logging regardless of SHOW_LOGS setting
+    # Make sure logs directory exists
+    logs_dir = PROJECT_ROOT / "logs"
+    if not logs_dir.exists():
+        logs_dir.mkdir(parents=True, exist_ok=True)
+    
+    _logger.add(logs_dir / f"{log_name}.log", level=logfile_level)
     return _logger
 
 

@@ -12,29 +12,7 @@ class CanvasClient:
     def __init__(self, api_key: Optional[str] = None, api_url: Optional[str] = None):
         self.api_key = api_key or CANVAS_API_KEY
         self.api_url = api_url or CANVAS_API_URL
-        
-        # Initialize cache
-        self.cache = {
-            "courses": {},
-            "assignments": {},
-            "announcements": {},
-            "grades": {},
-            "modules": {},
-            "files": {},
-            "user_info": None,
-            "last_updated": {}
-        }
-        
-        # Cache expiration time (in seconds)
-        self.cache_expiration = {
-            "courses": 3600,  # 1 hour
-            "assignments": 1800,  # 30 minutes
-            "announcements": 1800,  # 30 minutes
-            "grades": 1800,  # 30 minutes
-            "modules": 3600,  # 1 hour
-            "files": 3600,  # 1 hour
-            "user_info": 86400  # 24 hours
-        }
+        self.user_info = None
     
     def authenticate_user(self, user_token: Optional[str] = None) -> bool:
         """
@@ -52,60 +30,15 @@ class CanvasClient:
         try:
             response = requests.get(f"{self.api_url}/users/self", headers=headers)
             if response.status_code == 200:
-                self.cache["user_info"] = response.json()
+                self.user_info = response.json()
                 return True
             return False
         except Exception as e:
             logger.error(f"Authentication error: {e}")
             return False
     
-    def _check_cache(self, cache_type: str, identifier: Optional[str] = None) -> Tuple[bool, Any]:
-        """Check if cache is valid and return cached data if it is"""
-        current_time = time.time()
-        
-        # If cache type doesn't exist or hasn't been updated yet
-        if cache_type not in self.cache or cache_type not in self.cache["last_updated"]:
-            return False, None
-        
-        # If specific identifier is requested
-        if identifier:
-            if identifier not in self.cache[cache_type]:
-                return False, None
-            
-            last_updated = self.cache["last_updated"].get(f"{cache_type}_{identifier}")
-            if not last_updated or (current_time - last_updated) > self.cache_expiration[cache_type]:
-                return False, None
-            
-            return True, self.cache[cache_type][identifier]
-        else:
-            # Check overall cache validity
-            last_updated = self.cache["last_updated"].get(cache_type)
-            if not last_updated or (current_time - last_updated) > self.cache_expiration[cache_type]:
-                return False, None
-            
-            return True, self.cache[cache_type]
-    
-    def _update_cache(self, cache_type: str, data: Any, identifier: Optional[str] = None):
-        """Update cache with new data"""
-        current_time = time.time()
-        
-        if identifier:
-            if cache_type not in self.cache:
-                self.cache[cache_type] = {}
-            self.cache[cache_type][identifier] = data
-            self.cache["last_updated"][f"{cache_type}_{identifier}"] = current_time
-        else:
-            self.cache[cache_type] = data
-            self.cache["last_updated"][cache_type] = current_time
-    
     def load_active_courses(self) -> List[Dict]:
-        """Fetch and store active courses for the authenticated user"""
-        # Check cache first
-        is_cached, cached_courses = self._check_cache("courses")
-        if is_cached:
-            return cached_courses
-        
-        # Fetch from API if not cached
+        """Fetch active courses for the authenticated user"""
         headers = {"Authorization": f"Bearer {self.api_key}"}
         try:
             response = requests.get(
@@ -117,14 +50,6 @@ class CanvasClient:
             if response.status_code == 200:
                 courses = response.json()
                 active_courses = [course for course in courses if not course.get("access_restricted_by_date")]
-                
-                # Update cache
-                self._update_cache("courses", active_courses)
-                
-                # Pre-fetch assignments for each course to improve performance
-                for course in active_courses:
-                    self.get_course_assignments(course["id"])
-                
                 return active_courses
             else:
                 logger.error(f"Error fetching courses: {response.status_code}, {response.text}")
@@ -135,12 +60,6 @@ class CanvasClient:
     
     def get_course_details(self, course_id: int) -> Dict:
         """Get detailed information about a specific course"""
-        # Check cache first
-        is_cached, cached_course = self._check_cache("courses", str(course_id))
-        if is_cached:
-            return cached_course
-        
-        # Fetch from API if not cached
         headers = {"Authorization": f"Bearer {self.api_key}"}
         try:
             response = requests.get(
@@ -151,8 +70,6 @@ class CanvasClient:
             
             if response.status_code == 200:
                 course_details = response.json()
-                # Update cache
-                self._update_cache("courses", course_details, str(course_id))
                 return course_details
             else:
                 logger.error(f"Error fetching course details: {response.status_code}, {response.text}")
@@ -163,12 +80,6 @@ class CanvasClient:
     
     def get_course_assignments(self, course_id: int) -> List[Dict]:
         """Get assignments for a specific course"""
-        # Check cache first
-        is_cached, cached_assignments = self._check_cache("assignments", str(course_id))
-        if is_cached:
-            return cached_assignments
-        
-        # Fetch from API if not cached
         headers = {"Authorization": f"Bearer {self.api_key}"}
         try:
             response = requests.get(
@@ -179,8 +90,6 @@ class CanvasClient:
             
             if response.status_code == 200:
                 assignments = response.json()
-                # Update cache
-                self._update_cache("assignments", assignments, str(course_id))
                 return assignments
             else:
                 logger.error(f"Error fetching assignments: {response.status_code}, {response.text}")
@@ -191,12 +100,6 @@ class CanvasClient:
     
     def get_course_grades(self, course_id: int) -> Dict:
         """Get grades for a specific course"""
-        # Check cache first
-        is_cached, cached_grades = self._check_cache("grades", str(course_id))
-        if is_cached:
-            return cached_grades
-        
-        # Fetch from API if not cached
         headers = {"Authorization": f"Bearer {self.api_key}"}
         try:
             response = requests.get(
@@ -233,8 +136,6 @@ class CanvasClient:
                         "graded": submission.get("grade") is not None
                     })
                 
-                # Update cache
-                self._update_cache("grades", grades_info, str(course_id))
                 return grades_info
             else:
                 logger.error(f"Error fetching grades: {response.status_code}, {response.text}")
@@ -245,12 +146,6 @@ class CanvasClient:
     
     def get_course_modules(self, course_id: int) -> List[Dict]:
         """Get modules and items for a specific course"""
-        # Check cache first
-        is_cached, cached_modules = self._check_cache("modules", str(course_id))
-        if is_cached:
-            return cached_modules
-        
-        # Fetch from API if not cached
         headers = {"Authorization": f"Bearer {self.api_key}"}
         try:
             response = requests.get(
@@ -274,8 +169,6 @@ class CanvasClient:
                     else:
                         module["items"] = []
                 
-                # Update cache
-                self._update_cache("modules", modules, str(course_id))
                 return modules
             else:
                 logger.error(f"Error fetching modules: {response.status_code}, {response.text}")
@@ -286,12 +179,6 @@ class CanvasClient:
     
     def get_course_files(self, course_id: int) -> List[Dict]:
         """Get files for a specific course"""
-        # Check cache first
-        is_cached, cached_files = self._check_cache("files", str(course_id))
-        if is_cached:
-            return cached_files
-        
-        # Fetch from API if not cached
         headers = {"Authorization": f"Bearer {self.api_key}"}
         try:
             response = requests.get(
@@ -301,8 +188,6 @@ class CanvasClient:
             
             if response.status_code == 200:
                 files = response.json()
-                # Update cache
-                self._update_cache("files", files, str(course_id))
                 return files
             else:
                 logger.error(f"Error fetching files: {response.status_code}, {response.text}")
@@ -313,12 +198,6 @@ class CanvasClient:
     
     def get_course_announcements(self, course_id: int) -> List[Dict]:
         """Get announcements for a specific course"""
-        # Check cache first
-        is_cached, cached_announcements = self._check_cache("announcements", str(course_id))
-        if is_cached:
-            return cached_announcements
-        
-        # Fetch from API if not cached
         headers = {"Authorization": f"Bearer {self.api_key}"}
         try:
             response = requests.get(
@@ -329,8 +208,6 @@ class CanvasClient:
             
             if response.status_code == 200:
                 announcements = response.json()
-                # Update cache
-                self._update_cache("announcements", announcements, str(course_id))
                 return announcements
             else:
                 logger.error(f"Error fetching announcements: {response.status_code}, {response.text}")

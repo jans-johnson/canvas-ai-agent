@@ -24,3 +24,4 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4-turbo")
 # App settings
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+SHOW_LOGS = os.getenv("SHOW_LOGS", "True").lower() == "true"

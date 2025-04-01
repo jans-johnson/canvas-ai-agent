@@ -5,6 +5,7 @@ import sys
 from app.logger import logger
 from app.agent.canvasai import CanvasAI
 from app.utils.loading_utils import LoadingAnimation
+from app.config import SHOW_LOGS
 
 # Global variable to track exit request
 exit_requested = False
@@ -48,6 +49,10 @@ def main():
         print("\nWelcome to the Canvas Academic Assistant!")
         print("Ask me about your courses, assignments, deadlines, or grades.")
         print("Type 'exit' to quit.")
+        
+        # Inform about log display setting
+        if not SHOW_LOGS:
+            print("Note: Application logs are currently hidden. To enable logs, set SHOW_LOGS=True in your .env file.")
 
         while not exit_requested:
             prompt = input("\nYou: ")
