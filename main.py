@@ -1,4 +1,4 @@
-import asyncio
+from os import system
 import signal
 import sys
 
@@ -6,29 +6,24 @@ from app.logger import logger
 from app.agent.canvasai import CanvasAI
 from app.utils.loading_utils import LoadingAnimation
 
-# For clean shutdown
-async def shutdown(signal, loop):
-    """Cleanup tasks tied to the service's shutdown."""
-    logger.info(f"Received exit signal {signal.name}...")
-    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-    
-    logger.info(f"Cancelling {len(tasks)} outstanding tasks")
-    for task in tasks:
-        task.cancel()
-    
-    await asyncio.gather(*tasks, return_exceptions=True)
-    logger.info("Shutdown complete.")
-    loop.stop()
+# Global variable to track exit request
+exit_requested = False
 
-async def main():
+def signal_handler(sig, frame):
+    """Handle termination signals gracefully."""
+    global exit_requested
+    logger.info(f"Received exit signal {signal.name(sig)}...")
+    exit_requested = True
+    logger.info("Shutdown complete.")
+    sys.exit(0)
+
+def main():
     try:
         # Setup signal handlers
-        loop = asyncio.get_running_loop()
-        signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
-        for s in signals:
-            loop.add_signal_handler(
-                s, lambda s=s: asyncio.create_task(shutdown(s, loop))
-            )
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+        if hasattr(signal, 'SIGHUP'):  # Not available on Windows
+            signal.signal(signal.SIGHUP, signal_handler)
         
         # Initialize the agent
         logger.info("Initializing Canvas AI agent")
@@ -54,7 +49,7 @@ async def main():
         print("Ask me about your courses, assignments, deadlines, or grades.")
         print("Type 'exit' to quit.")
 
-        while True:
+        while not exit_requested:
             prompt = input("\nYou: ")
             
             if prompt.lower() in ['exit', 'quit', 'bye']:
@@ -74,9 +69,6 @@ async def main():
     except KeyboardInterrupt:
         logger.warning("Operation interrupted.")
         # Clean exit - no need to re-raise
-    except asyncio.CancelledError:
-        # Task was cancelled, exit gracefully
-        pass
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         raise
@@ -96,4 +88,4 @@ if __name__ == "__main__":
         pass
         
     print("Starting Canvas AI...")
-    asyncio.run(main())
+    main()
