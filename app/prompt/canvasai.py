@@ -33,10 +33,15 @@ Identify:
 4. Specific assignment/material mentioned (if any)
 5. What API calls would be needed to answer this query
 
+Additionally, if a course is mentioned, it will be matched against available courses:
+{courses_text}
+
 Format your response as a valid, parsable JSON object with these keys:
 {{
     "query_type": "string",
     "course": "string or null",
+    "course_id": "integer or null",  # Add the course ID if a match is found
+    "course_match_confidence": "high/medium/low or null if no course mentioned",
     "time_frame": "string or null",
     "specific_item": "string or null",
     "api_calls": ["array", "of", "string"]

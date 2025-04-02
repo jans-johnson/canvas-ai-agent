@@ -1,6 +1,6 @@
 import json
 import openai
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from app.logger import logger
 from app.config import OPENAI_API_KEY, OPENAI_MODEL
@@ -14,11 +14,27 @@ class OpenAIService:
         self.api_key = api_key or OPENAI_API_KEY
         openai.api_key = self.api_key
     
-    def classify_query(self, query: str) -> Dict:
+    def classify_query(self, query: str, courses: Optional[List[Dict]] = None) -> Dict:
         """
         Classify a user query to determine what information is needed
+        and match any mentioned course to the available courses
+        
+        Args:
+            query: The user's query
+            courses: Optional list of course objects to match against
         """
-        prompt = CLASSIFICATION_PROMPT.format(query=query)
+        # Format available courses for the prompt if provided
+        courses_text = ""
+        if courses:
+            courses_text = "Available courses:\n" + "\n".join([
+                f"ID: {course.get('id', 'Unknown')}, Name: {course.get('name', 'Unknown')}" 
+                for course in courses
+            ])
+        
+        prompt = CLASSIFICATION_PROMPT.format(
+            query=query,
+            courses_text=courses_text
+        )
         logger.debug("Sending classification request to OpenAI")
         
         try:
@@ -41,6 +57,11 @@ class OpenAIService:
                 # Parse the classification result
                 classification = json.loads(response_content)
                 logger.info(f"Query classified as: {classification.get('query_type')}")
+                
+                # Log course matching result if available
+                if classification.get("course_id"):
+                    logger.info(f"Course matched: {classification.get('course')} (ID: {classification.get('course_id')}, Confidence: {classification.get('course_match_confidence')})")
+                
                 return classification
             except json.JSONDecodeError as e:
                 # Fallback if JSON parsing fails
@@ -48,6 +69,8 @@ class OpenAIService:
                 return {
                     "query_type": "unknown",
                     "course": None,
+                    "course_id": None,
+                    "course_match_confidence": None,
                     "time_frame": None,
                     "specific_item": None,
                     "api_calls": ["load_active_courses"]
@@ -57,6 +80,8 @@ class OpenAIService:
             return {
                 "query_type": "unknown",
                 "course": None,
+                "course_id": None,
+                "course_match_confidence": None,
                 "time_frame": None,
                 "specific_item": None,
                 "api_calls": ["load_active_courses"]

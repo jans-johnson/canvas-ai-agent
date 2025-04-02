@@ -1,5 +1,4 @@
 import requests
-import time
 import datetime
 from typing import Dict, List, Optional, Any, Tuple
 from app.logger import logger
