@@ -82,10 +82,13 @@ class CanvasClient:
         headers = {"Authorization": f"Bearer {self.api_key}"}
         try:
             response = requests.get(
-                f"{self.api_url}/courses/{course_id}/assignments",
+                f"{self.api_url}/courses/{course_id}/assignment_groups",
                 headers=headers,
-                params={"include": ["submission"]}
-            )
+                params={
+                    "exclude_assignment_submission_types[]": "wiki_page",
+                    "exclude_response_fields[]": ["description", "rubric"],
+                    "include[]": ["assignments", "discussion_topic", "assessment_requests"]}
+                )
             
             if response.status_code == 200:
                 assignments = response.json()
@@ -227,44 +230,52 @@ class CanvasClient:
             
             for course in courses:
                 course_id = course["id"]
-                assignments = self.get_course_assignments(course_id)
+                # Get assignment groups which contain nested assignments
+                assignment_groups = self.get_course_assignments(course_id)
                 
-                for assignment in assignments:
-                    # Skip if no due date
-                    if not assignment.get("due_at"):
-                        continue
+                for group in assignment_groups:
+                    # Extract assignments from each group
+                    assignments = group.get("assignments", [])
                     
-                    # Parse the date with timezone awareness
-                    due_date_str = assignment["due_at"]
-                    # Make sure we handle the 'Z' timezone designator properly
-                    if due_date_str.endswith('Z'):
-                        due_date = datetime.datetime.fromisoformat(due_date_str.replace("Z", "+00:00"))
-                    else:
-                        # Add UTC timezone if missing
-                        try:
-                            due_date = datetime.datetime.fromisoformat(due_date_str)
-                            if due_date.tzinfo is None:
-                                due_date = due_date.replace(tzinfo=datetime.timezone.utc)
-                        except ValueError:
-                            # Fall back to a simpler parsing method if ISO format fails
+                    for assignment in assignments:
+                        # Skip if no due date
+                        if not assignment.get("due_at"):
+                            continue
+                        
+                        # Parse the date with timezone awareness
+                        due_date_str = assignment["due_at"]
+                        # Make sure we handle the 'Z' timezone designator properly
+                        if due_date_str.endswith('Z'):
+                            due_date = datetime.datetime.fromisoformat(due_date_str.replace("Z", "+00:00"))
+                        else:
+                            # Add UTC timezone if missing
                             try:
-                                due_date = datetime.datetime.strptime(due_date_str, "%Y-%m-%dT%H:%M:%SZ")
-                                due_date = due_date.replace(tzinfo=datetime.timezone.utc)
+                                due_date = datetime.datetime.fromisoformat(due_date_str)
+                                if due_date.tzinfo is None:
+                                    due_date = due_date.replace(tzinfo=datetime.timezone.utc)
                             except ValueError:
-                                # Skip this assignment if we can't parse the date
-                                continue
-                    
-                    # Check if assignment is upcoming (due in the future)
-                    if due_date > now:
-                        upcoming_deadlines.append({
-                            "course_name": course["name"],
-                            "course_id": course_id,
-                            "assignment_name": assignment["name"],
-                            "assignment_id": assignment["id"],
-                            "due_date": assignment["due_at"],
-                            "points_possible": assignment["points_possible"],
-                            "submitted": assignment.get("submission", {}).get("submitted_at") is not None
-                        })
+                                # Fall back to a simpler parsing method if ISO format fails
+                                try:
+                                    due_date = datetime.datetime.strptime(due_date_str, "%Y-%m-%dT%H:%M:%SZ")
+                                    due_date = due_date.replace(tzinfo=datetime.timezone.utc)
+                                except ValueError:
+                                    # Skip this assignment if we can't parse the date
+                                    continue
+                        
+                        # Check if assignment is upcoming (due in the future)
+                        if due_date > now:
+                            # Get submission status based on the assignment structure
+                            submission = assignment.get("has_submitted_submissions", False)
+                            
+                            upcoming_deadlines.append({
+                                "course_name": course["name"],
+                                "course_id": course_id,
+                                "assignment_name": assignment["name"],
+                                "assignment_id": assignment["id"],
+                                "due_date": assignment["due_at"],
+                                "points_possible": assignment.get("points_possible", 0),
+                                "submitted": submission
+                            })
             
             # Sort by due date
             upcoming_deadlines.sort(key=lambda x: x["due_date"])
