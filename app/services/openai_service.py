@@ -1,18 +1,16 @@
 import json
-import openai
+from openai import OpenAI
 from typing import Dict, List, Optional
 
 from app.logger import logger
-from app.config import OPENAI_API_KEY, OPENAI_MODEL
+from app.config import OPENAI_API_KEY, OPENAI_MODEL, OPENAI_BASE_URL
 from app.prompt.canvasai import CLASSIFICATION_PROMPT, RESPONSE_GENERATION_PROMPT, GENERATION_ERROR_RESPONSE
-from app.utils.loading_utils import timed_action
 
 class OpenAIService:
     """Service for interacting with OpenAI APIs"""
-    
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or OPENAI_API_KEY
-        openai.api_key = self.api_key
+
+    def __init__(self):
+        self.openai = OpenAI(api_key=OPENAI_API_KEY,base_url=OPENAI_BASE_URL)
     
     def classify_query(self, query: str, courses: Optional[List[Dict]] = None) -> Dict:
         """
@@ -39,7 +37,7 @@ class OpenAIService:
         
         try:
             # Make a request to OpenAI for query classification
-            response = openai.chat.completions.create(
+            response = self.openai.chat.completions.create(
                 model=OPENAI_MODEL,
                 messages=[
                     {"role": "system", "content": prompt},
@@ -102,7 +100,7 @@ class OpenAIService:
         logger.debug("Sending response generation request to OpenAI")
         try:
             # Make a request to OpenAI for response generation
-            response = openai.chat.completions.create(
+            response = self.openai.chat.completions.create(
                 model=OPENAI_MODEL,
                 messages=[
                     {"role": "system", "content": prompt},

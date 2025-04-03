@@ -19,7 +19,8 @@ CANVAS_API_URL = os.getenv("CANVAS_API_URL", "https://canvas.instructure.com/api
 
 # OpenAI settings
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4-turbo")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 
 # App settings
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
