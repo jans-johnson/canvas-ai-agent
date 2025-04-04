@@ -52,6 +52,15 @@ class OpenAIService:
             logger.debug(f"OpenAI JSON response: {response_content}")
             
             try:
+                # Check if the response is wrapped in markdown code blocks
+                if response_content.startswith("```"):
+                    # Extract the JSON content from within the markdown code block
+                    lines = response_content.split('\n')
+                    # Remove the first line (```json) and the last line (```)
+                    if len(lines) > 2:
+                        json_content = '\n'.join(lines[1:-1])
+                        response_content = json_content
+                
                 # Parse the classification result
                 classification = json.loads(response_content)
                 logger.info(f"Query classified as: {classification.get('query_type')}")
