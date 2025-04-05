@@ -43,6 +43,21 @@ Canvas Academic Assistant is an advanced, AI-driven conversational platform meti
      - `CANVAS_API_KEY`: Your Canvas API key for authenticating API requests.
      - `CANVAS_API_URL`: The base URL for your institution's Canvas LMS API.
 
+### Obtaining Canvas Access Tokens
+To use the Canvas API, you need to generate an access token. Follow these steps:
+
+1. **Log in to Canvas**: Access your institution's Canvas LMS and log in with your credentials.
+2. **Navigate to Account Settings**: Click on your profile picture or name in the global navigation menu, then select "Settings."
+3. **Generate a New Access Token**:
+   - Scroll down to the "Approved Integrations" section.
+   - Click the **+ New Access Token** button.
+   - Provide a purpose for the token (e.g., "Canvas Academic Assistant") and set an expiration date if required.
+   - Click **Generate Token**.
+4. **Copy the Token**: Once the token is generated, copy it immediately. You will not be able to view it again later.
+5. **Store the Token Securely**: Paste the token into the `.env` file under the `CANVAS_API_KEY` variable.
+
+**Note**: Keep your access token confidential and do not share it with others. If the token is compromised, revoke it immediately from the "Approved Integrations" section in Canvas.
+
 4. **Launch the Application**
    Execute the following command to initiate the Flask server:
    ```bash
