@@ -1,0 +1,67 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Academic Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-graduation-cap"></i> Canvas AI</h2>
+            </div>
+            <div class="course-list-container">
+                <h3>Your Courses</h3>
+                <div id="course-list" class="course-list">
+                    <div class="loading-courses">
+                        <i class="fas fa-circle-notch fa-spin"></i> Loading courses...
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <p>Canvas Academic Assistant</p>
+                <button id="quit-button" class="quit-button">
+                    <i class="fas fa-power-off"></i> Quit Application
+                </button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2><i class="fas fa-robot"></i> Academic Assistant</h2>
+                    <div class="chat-header-actions">
+                        <button id="clear-chat" title="Clear chat history">
+                            <i class="fas fa-broom"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="chat-messages" class="chat-messages">
+                    <div class="message assistant-message">
+                        <div class="message-content">
+                            <p>Welcome to the Canvas Academic Assistant! Ask me about your courses, assignments, deadlines, or grades.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="chat-input-container">
+                    <form id="chat-form">
+                        <input type="text" id="chat-input" placeholder="Type your message here..." autocomplete="off">
+                        <button type="submit" id="send-button">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
