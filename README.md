@@ -26,22 +26,17 @@ Canvas Academic Assistant is an advanced, AI-driven conversational platform meti
    ```
 
 2. **Set Up a Virtual Environment**
-   It is recommended to use a virtual environment to isolate the project's dependencies. Follow these steps:
+   It is recommended to use a virtual environment to isolate the project's dependencies. Follow these steps using Conda:
 
-   - Create a virtual environment:
+   - Create a Conda virtual environment with Python 3.11:
      ```bash
-     python -m venv venv
+     conda create --name canvas-ai-env python=3.11
      ```
    - Activate the virtual environment:
-     - On **Windows**:
-       ```bash
-       venv\Scripts\activate
-       ```
-     - On **macOS/Linux**:
-       ```bash
-       source venv/bin/activate
-       ```
-   - Once activated, your terminal prompt will change to indicate the virtual environment is active.
+     ```bash
+     conda activate canvas-ai-env
+     ```
+   - Once activated, your terminal prompt will change to indicate the Conda environment is active.
 
 3. **Install Dependencies**
    Install all required Python libraries and frameworks specified in `requirements.txt`:
