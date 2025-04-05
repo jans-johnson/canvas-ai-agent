@@ -22,16 +22,34 @@ Canvas Academic Assistant is an advanced, AI-driven conversational platform meti
    Clone the project repository to your local machine:
    ```bash
    git clone https://github.com/jans-johnson/canvas-ai-agent
-   cd CanvasAi/Application
+   cd canvas-ai-agent
    ```
 
-2. **Install Dependencies**
+2. **Set Up a Virtual Environment**
+   It is recommended to use a virtual environment to isolate the project's dependencies. Follow these steps:
+
+   - Create a virtual environment:
+     ```bash
+     python -m venv venv
+     ```
+   - Activate the virtual environment:
+     - On **Windows**:
+       ```bash
+       venv\Scripts\activate
+       ```
+     - On **macOS/Linux**:
+       ```bash
+       source venv/bin/activate
+       ```
+   - Once activated, your terminal prompt will change to indicate the virtual environment is active.
+
+3. **Install Dependencies**
    Install all required Python libraries and frameworks specified in `requirements.txt`:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure Environment Variables**
+4. **Configure Environment Variables**
    - Duplicate the `.example.env` file and rename it to `.env`:
      ```bash
      cp .example.env .env
@@ -58,14 +76,14 @@ To use the Canvas API, you need to generate an access token. Follow these steps:
 
 **Note**: Keep your access token confidential and do not share it with others. If the token is compromised, revoke it immediately from the "Approved Integrations" section in Canvas.
 
-4. **Launch the Application**
+5. **Launch the Application**
    Execute the following command to initiate the Flask server:
    ```bash
    python main.py
    ```
    The application will automatically open in your default web browser at `http://127.0.0.1:5000`.
 
-5. **Interact with the Chatbot**
+6. **Interact with the Chatbot**
    Use the web interface to engage with the AI assistant. Ask questions about your courses, assignments, grades, or deadlines, and receive intelligent, context-aware responses.
 
 ## Architectural Overview
