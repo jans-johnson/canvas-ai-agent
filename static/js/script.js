@@ -153,9 +153,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const messageContent = document.createElement('div');
         messageContent.className = 'message-content';
         
-        // Replace newlines with <br> tags
-        const formattedMessage = message.replace(/\n/g, '<br>');
-        messageContent.innerHTML = `<p>${formattedMessage}</p>`;
+        // Process markdown-like formatting for assistant messages
+        if (sender === 'assistant') {
+            // Convert markdown headings
+            message = message.replace(/#{3} (.*)/g, '<h3>$1</h3>');
+            message = message.replace(/#{2} (.*)/g, '<h2>$1</h2>');
+            
+            // Convert bold text
+            message = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert bullet points
+            message = message.replace(/• (.*)/g, '<li>$1</li>');
+            message = message.replace(/\n((?:<li>.*<\/li>\n)+)/g, '<ul>$1</ul>');
+            
+            // Highlight dates and deadlines
+            message = message.replace(/(due|deadline|by|on|at|date):\s*([A-Za-z]+day,\s+[A-Za-z]+\s+\d{1,2},\s+\d{4}\s+at\s+\d{1,2}:\d{2}\s+[AP]M)/gi, 
+                '$1: <span class="message-highlight">$2</span>');
+            
+            // Add info cards for important notifications
+            message = message.replace(/\[INFO\](.*?)\[\/INFO\]/gs, '<div class="info-card">$1</div>');
+            message = message.replace(/\[WARNING\](.*?)\[\/WARNING\]/gs, '<div class="warning-card">$1</div>');
+            
+            // Ensure proper line breaks
+            message = message.replace(/\n/g, '<br>');
+        } else {
+            // For user messages, just handle line breaks
+            message = message.replace(/\n/g, '<br>');
+        }
+        
+        messageContent.innerHTML = `<p>${message}</p>`;
         
         // Add timestamp
         const timestamp = document.createElement('div');
