@@ -21,7 +21,7 @@ Canvas Academic Assistant is an advanced, AI-driven conversational platform meti
 1. **Clone the Repository**
    Clone the project repository to your local machine:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/jans-johnson/canvas-ai-agent
    cd CanvasAi/Application
    ```
 
